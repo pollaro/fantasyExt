@@ -1,0 +1,15 @@
+{
+	"name": "Fantasy Sports Stat Checker for Yahoo",
+	"version": "1.0",
+	"description": "Checks live stats for teams",
+	"options_page": "options.html",
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": false
+	},
+	"browser_action": {
+		"default_popup": "popup.html"
+	},
+	"permissions": ["https://fantasysports.yahooapis.com/fantasy/v2/*", "identity", "storage"],
+	"manifest_version": 2
+}
