@@ -2,25 +2,26 @@ const clientID = 'dj0yJmk9czVITjBENktzUkNuJmQ9WVdrOVowWTVXbE4zTkdFbWNHbzlNQS0tJn
 const clientSecret = 'b9c3952b8f4185ea5653652c74a62fbec64051fc'
 const redirect = 'https://cnkafadbbingcfbcnecceakbpplibpop.chromiumapp.org'
 const encoded = window.btoa(clientID + ':' + clientSecret)
-;(async function main() {
-	let token = outsideAuth((code) => {
-		getAccessToken(code)
-	})
-})()
 
-function getAccessToken(code) {
+outsideAuth(function(code) {
 	let xhr = new XMLHttpRequest()
-	xhr.open('POST', 'https://api.login.com/oauth2/get_token')
-	console.log(encoded)
+	xhr.open('POST', 'https://api.login.yahoo.com/oauth2/get_token')
+	xhr.withCredentials = true
 	xhr.setRequestHeader('Authorization', 'Basic ' + encoded)
+	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
 	xhr.onreadystatechange = function() {
-		if (xhr.readyState === 4) {
-			resp.xhr.response
-			console.log(resp)
+		if (xhr.status === 200) {
+			let resp = xhr.response
+			chrome.storage.local.set(
+				{ access_token: resp['access_token'], refresh_token: resp['refresh_token'] },
+				function() {
+					console.log('supposedly saved')
+				}
+			)
 		}
 	}
-	xhr.send('grant_type=authorization_code&code=' + code + '&redirect_uri=' + redirect)
-}
+	xhr.send('grant_type=authorization_code&redirect_uri=' + redirect + '&code=' + code)
+})
 
 function outsideAuth(callback) {
 	chrome.identity.launchWebAuthFlow(
@@ -39,30 +40,7 @@ function outsideAuth(callback) {
 			chrome.storage.local.set({ access_code: code[1] }, function() {
 				console.log('The code is ' + code[1])
 			})
+			callback(code[1])
 		}
 	)
-}
-
-function getFantasyStats(token) {
-	console.log('fantasy stats')
-	xmlReq(token, function(result) {
-		console.log(result)
-		return result
-	})
-}
-
-function xmlReq(userToken, callback) {
-	const apiURL = 'https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1//'
-	var xhr = new XMLHttpRequest()
-	var resp
-	xhr.open('GET', apiURL)
-	xhr.withCredentials = true
-	xhr.setRequestHeader('Authorization', 'Bearer ' + userToken)
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState === 4) {
-			resp = xhr.response
-			callback(resp)
-		}
-	}
-	xhr.send()
 }
