@@ -10,6 +10,11 @@
 	"browser_action": {
 		"default_popup": "html/popup.html"
 	},
-	"permissions": ["https://api.login.yahoo.com/oauth*", "identity", "storage"],
+	"permissions": [
+		"https://api.login.yahoo.com/oauth*",
+		"https://fantasysports.yahooapis.com/fantasy/v2*",
+		"identity",
+		"storage"
+	],
 	"manifest_version": 2
 }

@@ -5,9 +5,36 @@ const encoded = window.btoa(clientID + ':' + clientSecret)
 
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
 	if (msg.init) {
-		chrome.storage.local.get(['access_token', 'refresh_token'], function(result) {
-			if (result.refresh_token != '') {
-				sendResponse({ access_token: result.access_token, refresh_token: result.refresh_token })
+		chrome.storage.local.get(['access_token', 'refresh_token', 'date'], function(result) {
+			if (result.date) {
+				let currTime = new Date()
+				if (currTime - Date.parse(result.date) < 360000) {
+					sendResponse({ access_token: result.access_token })
+				} else {
+					$.ajax({
+						method: 'POST',
+						data:
+							'grant_type=refresh_token&redirect_uri=https%3A%2F%2Fwww.example.com&refresh_token=' +
+							result.refresh_token,
+						url: 'https://api.login.yahoo.com/oauth2/get_token',
+						beforeSend: function(xhr) {
+							xhr.setRequestHeader('Authorization', 'Basic ' + encoded)
+						},
+						xhrFields: { withCredentials: true }
+					}).done(function(res) {
+						let newDate = new Date()
+						chrome.storage.local.set(
+							{
+								access_token: res.access_token,
+								refresh_token: res.refresh_token,
+								date: newDate
+							},
+							function() {
+								sendResponse({ access_token: res.access_token })
+							}
+						)
+					})
+				}
 			} else {
 				outsideAuth(function(code) {
 					let xhr = new XMLHttpRequest()
@@ -21,10 +48,15 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
 							let tokRegex = /.*access_token\"\:\"(.*)\"\,.*refresh_token\"\:\"(.*)\"\,\"e.*/
 							let access_token = resp.match(tokRegex)[1]
 							let refresh_token = resp.match(tokRegex)[2]
+							let dateTaken = new Date()
 							chrome.storage.local.set(
-								{ access_token: access_token, refresh_token: refresh_token },
+								{
+									access_token: access_token,
+									refresh_token: refresh_token,
+									date: dateTaken.toString()
+								},
 								function() {
-									sendResponse({ access_token: access_token, refresh_token: refresh_token })
+									sendResponse({ access_token: access_token })
 								}
 							)
 						}
@@ -33,6 +65,10 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
 				})
 			}
 		})
+	}
+	if (msg.parseSports) {
+		let leagueInfo = parseLeagues(msg.parseSports)
+		sendResponse(leagueInfo)
 	}
 	return true
 })
@@ -57,4 +93,23 @@ function outsideAuth(callback) {
 			return callback(code[1])
 		}
 	)
+}
+function parseLeagues(objIn) {
+	console.log(objIn)
+	let sports = {}
+	sports['user'] = objIn.fantasy_content.users[0].user[0]
+	let sport = objIn.fantasy_content.users[0].user[1].games
+	let sprtCnt = sport.count
+	for (var x = 0; x < sprtCnt; x++) {
+		let name = sport[x].game[0].name
+		sports[name] = {}
+		let teamCnt = sport[x].game[1].teams.count
+		for (var y = 0; y < teamCnt; y++) {
+			let team = sport[x].game[1].teams[y].team[0][2].name
+
+			sports[name][team] = sport[x].game[1].teams[y].team[2].roster
+		}
+	}
+	console.log(sports)
+	return sports
 }
