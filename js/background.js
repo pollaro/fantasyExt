@@ -108,8 +108,24 @@ function parseLeagues(objIn) {
 			let team = sport[x].game[1].teams[y].team[0][2].name
 
 			sports[name][team] = sport[x].game[1].teams[y].team[2].roster
+			let rosterStr = mapRoster(sports[name][team])
+			sports[name][team]['rosterIDs'] = rosterStr
 		}
 	}
-	console.log(sports)
 	return sports
+}
+function mapRoster(rosterIn) {
+	let playerStr = ''
+	let playerCnt = rosterIn[0].players.count
+	for (var p = 0; p < playerCnt; p++) {
+		let status = rosterIn[0].players[p].player[1].selected_position[1].position
+		if (status !== 'BN') {
+			let playerID = rosterIn[0].players[p].player[0][0].player_key
+			playerStr = playerStr + playerID
+			if (p !== playerCnt - 1) {
+				playerStr = playerStr + ','
+			}
+		}
+	}
+	return playerStr
 }
