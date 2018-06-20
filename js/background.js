@@ -94,6 +94,7 @@ function outsideAuth(callback) {
 		}
 	)
 }
+
 function parseLeagues(objIn) {
 	console.log(objIn)
 	let sports = {}
@@ -106,20 +107,24 @@ function parseLeagues(objIn) {
 		let teamCnt = sport[x].game[1].teams.count
 		for (var y = 0; y < teamCnt; y++) {
 			let team = sport[x].game[1].teams[y].team[0][2].name
-
 			sports[name][team] = sport[x].game[1].teams[y].team[2].roster
+			let league = sport[x].game[1].teams[y].team[0][0].team_key
+			league = league.match(/^(.+)\.t+/i)[1]
+			sports[name][team]['leagueID'] = league
 			let rosterStr = mapRoster(sports[name][team])
 			sports[name][team]['rosterIDs'] = rosterStr
 		}
 	}
 	return sports
 }
+
 function mapRoster(rosterIn) {
 	let playerStr = ''
 	let playerCnt = rosterIn[0].players.count
 	for (var p = 0; p < playerCnt; p++) {
 		let status = rosterIn[0].players[p].player[1].selected_position[1].position
-		if (status !== 'BN') {
+		console.log(status)
+		if (status !== 'BN' || status !== 'DL') {
 			let playerID = rosterIn[0].players[p].player[0][0].player_key
 			playerStr = playerStr + playerID
 			if (p !== playerCnt - 1) {
