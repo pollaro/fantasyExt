@@ -5,7 +5,7 @@ chrome.runtime.sendMessage({ init: true, parseSports: false }, function(response
 	if (response) {
 		userToken = response.access_token
 		console.log(response)
-		getRosters(userToken)
+		let allPlayers = getRosters(userToken)
 	} else {
 		console.log('No response from background.js')
 	}
@@ -38,10 +38,15 @@ function getStats(token, objIn) {
 	let day = date.getDate().toString()
 	let year = date.getFullYear().toString()
 	let strDate = year + '-' + month + '-' + day
+	let objOut = {}
 	for (var sport in objIn) {
 		if (sport != 'user' && sport != 'Football') {
+			objOut[sport] = { team: {} }
 			let objInShrt = objIn[sport]
+			let teamCnt = 0
 			for (var teams in objInShrt) {
+				objOut[sport].team[teamCnt] = {}
+				objOut[sport].team[teamCnt]['name'] = teams
 				// get league settings for stats counted
 				let leagueUrl = url2 + objInShrt[teams].leagueID + '/settings?format=json'
 				let statObj = {}
@@ -85,7 +90,11 @@ function getStats(token, objIn) {
 					}
 					console.log(teamObj)
 				})
+				objOut[sport].team[teamCnt]['roster'] = teamObj
+				teamCnt++
 			}
 		}
 	}
+	console.log(objOut)
+	return objOut
 }
