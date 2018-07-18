@@ -111,8 +111,9 @@ function parseLeagues(objIn) {
 			let league = sport[x].game[1].teams[y].team[0][0].team_key
 			league = league.match(/^(.+)\.t+/i)[1]
 			sports[name][team]['leagueID'] = league
-			let rosterStr = mapRoster(sports[name][team])
-			sports[name][team]['rosterIDs'] = rosterStr
+			let roster = mapRoster(sports[name][team])
+			sports[name][team]['rosterIDs'] = roster[0]
+			sports[name][team]['positions'] = roster[1]
 		}
 	}
 	return sports
@@ -121,16 +122,24 @@ function parseLeagues(objIn) {
 function mapRoster(rosterIn) {
 	let playerStr = ''
 	let playerCnt = rosterIn[0].players.count
+	let posObj = {}
 	for (var p = 0; p < playerCnt; p++) {
 		let status = rosterIn[0].players[p].player[1].selected_position[1].position
 		console.log(status)
-		if (status !== 'BN' || status !== 'DL') {
+		if (status !== 'BN' && status !== 'DL') {
 			let playerID = rosterIn[0].players[p].player[0][0].player_key
 			playerStr = playerStr + playerID
 			if (p !== playerCnt - 1) {
 				playerStr = playerStr + ','
 			}
+			posObj[rosterIn[0].players[p].player[0][2].name.full] = [status, p]
+			// posArr.push(posObj)
 		}
 	}
-	return playerStr
+
+	if (playerStr[playerStr.length - 1] === ',') {
+		playerStr = playerStr.slice(0, playerStr.length - 1)
+	}
+	console.log(posObj)
+	return [playerStr, posObj]
 }

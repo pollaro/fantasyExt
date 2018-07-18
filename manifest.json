@@ -4,7 +4,7 @@
 	"description": "Checks live stats for teams",
 	"options_page": "html/options.html",
 	"background": {
-		"scripts": ["jquery-3.3.1.min.js", "js/background.js"],
+		"scripts": ["js/jquery-3.3.1.min.js", "js/background.js"],
 		"persistent": false
 	},
 	"browser_action": {
